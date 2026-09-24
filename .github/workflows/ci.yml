@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build the extension
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup target add wasm32-wasip2
+      - run: cargo build --release --locked --target wasm32-wasip2
+      - name: the bump script accepts every Navigator tag shape and refuses others
+        run: |
+          set -euo pipefail
+          for good in 26.9.24 26.9.24-hotfix.1 26.9.24-rc.2; do
+              scripts/bump.sh "${good}" >/dev/null
+              grep -qx "version = \"${good}\"" extension.toml
+              grep -qx "version = \"${good}\"" Cargo.toml
+          done
+          for bad in v26.9.24 26.09.24 26.9.24-beta.1 latest; do
+              if scripts/bump.sh "${bad}" 2>/dev/null; then echo "accepted ${bad}"; exit 1; fi
+          done
+          git checkout -- extension.toml Cargo.toml Cargo.lock

@@ -1,0 +1,87 @@
+name: bump
+
+# Carry the extension's version to a new Navigator release and tag it `v<tag>`.
+#
+# `repository_dispatch` is the automatic trigger: Navigator's `deploy.yml` fires
+# `navigator-release` once the release archives are attached, the same hand-off
+# the Homebrew tap receives. `workflow_dispatch` is the repair handle for a tag
+# whose bump went wrong.
+#
+# Nothing is published to Zed's registry here — this keeps the dev extension's
+# version beside Navigator's and navigator-ux's. `navigator-lsp` itself is still
+# resolved at runtime from Navigator's Releases.
+on:
+  repository_dispatch:
+    types: [navigator-release]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Navigator release tag (YY.M.D, YY.M.D-hotfix.N, or YY.M.D-rc.N)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bump-extension
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    name: bump the extension to a Navigator release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: resolve the release tag
+        id: release
+        env:
+          # Read through the environment, never interpolated into the script: a
+          # `client_payload` is caller-shaped input.
+          DISPATCH_TAG: ${{ github.event.client_payload.tag }}
+          MANUAL_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          tag="${DISPATCH_TAG:-${MANUAL_TAG:-}}"
+          if [ -z "${tag}" ]; then
+              echo "::error::neither client_payload.tag nor inputs.tag was set"
+              exit 1
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v${tag}" >/dev/null; then
+              echo "v${tag} already exists — nothing to do"
+              echo "done=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: install the Zed extension target
+        if: steps.release.outputs.done != 'true'
+        run: rustup target add wasm32-wasip2
+
+      - name: rewrite the version
+        if: steps.release.outputs.done != 'true'
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: scripts/bump.sh "${TAG}"
+
+      # Build what is about to be tagged, so a tag always names a shim that compiles.
+      - name: build the extension
+        if: steps.release.outputs.done != 'true'
+        run: cargo build --release --locked --target wasm32-wasip2
+
+      - name: commit, tag, and push
+        if: steps.release.outputs.done != 'true'
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add extension.toml Cargo.toml Cargo.lock
+          # A re-run after the commit landed but the tag did not has nothing new
+          # to commit; tag the tree as it stands.
+          git diff --cached --quiet || git commit -m "Bump version to ${TAG}"
+          git tag -a "v${TAG}" -m "Navigator ${TAG}"
+          # Explicit refspecs: `actions/checkout` leaves `main` with no upstream.
+          git push origin "HEAD:refs/heads/main" "refs/tags/v${TAG}"
