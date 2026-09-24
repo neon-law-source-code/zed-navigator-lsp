@@ -7,8 +7,7 @@ buffers.
 This repository carries no Navigator source. At runtime the extension resolves the latest `navigator-lsp-<tag>-<platform>`
 archive from [`neon-law-source-code/navigator`'s GitHub Releases](https://github.com/neon-law-source-code/navigator/releases),
 downloads it, and launches the `navigator-lsp` binary against Zed's built-in Markdown language. `navigator-lsp` itself
-and this shim are both licensed BUSL-1.1, the same licence as Navigator — see [LICENSE](LICENSE) and Navigator's
-[NOTICE](https://github.com/neon-law-source-code/navigator/blob/main/NOTICE).
+is licensed BUSL-1.1 and is downloaded at runtime, never bundled; this shim's own code is Apache-2.0 (see [LICENSE](LICENSE)).
 
 ## Developing
 
