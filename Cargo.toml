@@ -1,6 +1,6 @@
 [package]
 name = "zed-navigator-lsp"
-version = "26.9.25"
+version = "26.9.26-rc.2"
 edition = "2021"
 license = "Apache-2.0"
 publish = false

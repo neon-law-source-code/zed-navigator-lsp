@@ -753,7 +753,7 @@ dependencies = [
 
 [[package]]
 name = "zed-navigator-lsp"
-version = "26.9.25"
+version = "26.9.26-rc.2"
 dependencies = [
  "zed_extension_api",
 ]
