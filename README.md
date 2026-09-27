@@ -5,9 +5,11 @@ A [Zed](https://zed.dev) extension shim that attaches
 buffers.
 
 This repository carries no Navigator source. At runtime the extension resolves the latest `navigator-lsp-<tag>-<platform>`
-archive from [`neon-law-source-code/navigator`'s GitHub Releases](https://github.com/neon-law-source-code/navigator/releases),
-downloads it, and launches the `navigator-lsp` binary against Zed's built-in Markdown language. `navigator-lsp` itself
-is licensed BUSL-1.1 and is downloaded at runtime, never bundled; this shim's own code is Apache-2.0 (see [LICENSE](LICENSE)).
+archive from [`neon-law-source-code/homebrew-navigator`'s GitHub Releases](https://github.com/neon-law-source-code/homebrew-navigator/releases) —
+the public distribution host Navigator's `deploy.yml` mirrors every release onto (ENG-931), which stays public
+independent of the Navigator source tree — downloads it, and launches the `navigator-lsp` binary against Zed's
+built-in Markdown language. `navigator-lsp` itself is licensed BUSL-1.1 and is downloaded at runtime, never bundled;
+this shim's own code is Apache-2.0 (see [LICENSE](LICENSE)).
 
 ## Developing
 

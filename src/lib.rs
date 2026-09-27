@@ -2,14 +2,22 @@
 //!
 //! Carries no Navigator source — it only resolves and launches a
 //! platform-matching `navigator-lsp` binary from
-//! `neon-law-source-code/navigator`'s own GitHub Releases (the
-//! `navigator-lsp-<tag>-<platform>` archives `.github/workflows/deploy.yml`
-//! attaches there), and points Zed's built-in Markdown language at it.
+//! `neon-law-source-code/homebrew-navigator`'s GitHub Releases (the
+//! `navigator-lsp-<tag>-<platform>` archives Navigator's `deploy.yml` attaches
+//! to its own Release and then mirrors there), and points Zed's built-in
+//! Markdown language at it.
+//!
+//! ENG-931: this used to name `neon-law-source-code/navigator` — the
+//! Navigator source tree — because that repository's own Release carried the
+//! archives. It will not stay public, so `deploy.yml` now mirrors the same
+//! tag-exact archives onto the public Homebrew tap's Release as well, and
+//! this extension reads from there instead. Never point this back at the
+//! source tree.
 
 use zed_extension_api::{self as zed, LanguageServerId, Result};
 
 /// The repository whose GitHub Releases carry the `navigator-lsp` archives.
-const NAVIGATOR_REPO: &str = "neon-law-source-code/navigator";
+const NAVIGATOR_REPO: &str = "neon-law-source-code/homebrew-navigator";
 
 struct NavigatorLspExtension {
     cached_binary_path: Option<String>,
